@@ -367,6 +367,8 @@ static int forward_query(int udpfd, union mysockaddr *udpaddr,
 #endif
 	  
 	  header->id = htons(forward->new_id);
+
+      plen = add_custom_opts_config(header, plen, ((unsigned char *)header) + EDNS_PKTSZ);
 	  
 	  /* In strict_order mode, always try servers in the order 
 	     specified in resolv.conf, if a domain is given 

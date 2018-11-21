@@ -435,3 +435,15 @@ size_t add_edns0_config(struct dns_header *header, size_t plen, unsigned char *l
 	  
   return plen;
 }
+
+size_t add_custom_opts_config(struct dns_header *header, size_t plen, unsigned char *limit)
+{
+    if (!daemon->local_opts) { return plen; }
+    for (int i = 0; i < daemon->local_opts_length; i++)
+      {
+          plen = add_pseudoheader(header, plen, limit, PACKETSZ, daemon->local_opts[i]->code,
+                                  (unsigned char *)daemon->local_opts[i]->data, strlen(daemon->local_opts[i]->data), 0, 1);
+      }
+
+    return plen;
+}
