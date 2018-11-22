@@ -976,6 +976,11 @@ struct dhcp_relay {
   struct dhcp_relay *current, *next;
 };
 
+struct local_opt {
+    int code;
+    char *data;
+};
+
 extern struct daemon {
   /* datastuctures representing the command-line and 
      config file arguments. All set (including defaults)
@@ -1131,6 +1136,10 @@ extern struct daemon {
   /* file for packet dumps. */
   int dumpfd;
 #endif
+
+  /* Custom eDNS0 OPTs */
+  struct local_opt **local_opts;
+  int local_opts_length;
 } *daemon;
 
 /* cache.c */
@@ -1629,6 +1638,7 @@ size_t add_do_bit(struct dns_header *header, size_t plen, unsigned char *limit);
 size_t add_edns0_config(struct dns_header *header, size_t plen, unsigned char *limit, 
 			union mysockaddr *source, time_t now, int *check_subnet);
 int check_source(struct dns_header *header, size_t plen, unsigned char *pseudoheader, union mysockaddr *peer);
+size_t add_custom_opts_config(struct dns_header *header, size_t plen, unsigned char *limit);
 
 /* arp.c */
 int find_mac(union mysockaddr *addr, unsigned char *mac, int lazy, time_t now);

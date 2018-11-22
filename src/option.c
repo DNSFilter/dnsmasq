@@ -166,7 +166,8 @@ struct myoption {
 #define LOPT_UBUS          354
 #define LOPT_NAME_MATCH    355
 #define LOPT_CAA           356
- 
+#define LOPT_CUSTOM_OPTS   357
+
 #ifdef HAVE_GETOPT_LONG
 static const struct option opts[] =  
 #else
@@ -337,6 +338,7 @@ static const struct myoption opts[] =
     { "dhcp-rapid-commit", 0, 0, LOPT_RAPID_COMMIT },
     { "dumpfile", 1, 0, LOPT_DUMPFILE },
     { "dumpmask", 1, 0, LOPT_DUMPMASK },
+    { "custom-opts", 2, 0, LOPT_CUSTOM_OPTS },
     { NULL, 0, 0, 0 }
   };
 
@@ -515,8 +517,10 @@ static struct {
   { LOPT_RAPID_COMMIT, OPT_RAPID_COMMIT, NULL, gettext_noop("Enables DHCPv4 Rapid Commit option."), NULL },
   { LOPT_DUMPFILE, ARG_ONE, "<path>", gettext_noop("Path to debug packet dump file"), NULL },
   { LOPT_DUMPMASK, ARG_ONE, "<hex>", gettext_noop("Mask which packets to dump"), NULL },
+  { LOPT_CUSTOM_OPTS, ARG_ONE, "<hex>", gettext_noop("Custom OPT eDNS0 fields to be send on every request"), NULL },
   { 0, 0, NULL, NULL, NULL }
-}; 
+};
+
 
 /* We hide metacharacters in quoted strings by mapping them into the ASCII control
    character space. Note that the \0, \t \b \r \033 and \n characters are carefully placed in the
@@ -4394,7 +4398,72 @@ err:
 	break;
       }
 #endif
-		
+
+    case LOPT_CUSTOM_OPTS: /* -- Custom eDNS0 OPT values */
+      {
+        int n = 0;
+        int c = 0;
+        while (arg[c] != '\0')
+          {
+            if (arg[c] == ',')
+              {
+                n++;
+              }
+            c++;
+          }
+
+        if (n == 0)
+          {
+            break;
+          }
+
+        daemon->local_opts = malloc((n/2)*sizeof(struct local_opt));
+        daemon->local_opts_length = 0;
+        n = 0;
+        while(arg)
+          {
+            daemon->local_opts[n] = malloc(sizeof(struct local_opt));
+            comma = split_chr(arg, ';');
+            char *value_format = split(arg);
+            char *code = arg;
+            char *format = split(value_format);
+            char *value = value_format;
+
+            if (!atoi_check16(code, &daemon->local_opts[n]->code))
+              {
+                ret_err_free(_("invalid local OPT code value"), &daemon->local_opts[n]);
+              }
+
+            if (strcmp(format, "hex") == 0)
+              {
+                int len = strlen(value);
+                if (len % 2 != 0)
+                {
+                    ret_err_free(_("invalid string representation for hexadecimal value, number of characters is odd"), &daemon->local_opts[n]);
+                }
+
+                char *hex = malloc(sizeof(char)*((len/2) + 1));
+                int parsed = parse_hex(value, hex, len/2, NULL, NULL);
+                if (parsed != len/2)
+                {
+                    ret_err_free(_("invalid hexadecimal value"), &daemon->local_opts[n]);
+                }
+
+                daemon->local_opts[n]->data = hex;
+              }
+            else
+              {
+                  daemon->local_opts[n]->data = opt_string_alloc(value);
+              }
+
+            daemon->local_opts_length++;
+            arg = comma;
+            n++;
+          }
+
+        break;
+      }
+
     default:
       ret_err(_("unsupported option (check that dnsmasq was compiled with DHCP/TFTP/DNSSEC/DBus support)"));
       
