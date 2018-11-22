@@ -679,4 +679,6 @@
 #dhcp-ignore-names=tag:wpad-ignore
 
 # Custom OPT eDNS0 fields to be send on every request
-#custom-opts=65007,test1;65008,test2;65009,test3
+# opt-code,value,format
+# Valid formats: string, hex
+#custom-opts=65007,d0ded65e1cd99642892d5685d6486490,hex;65008,test2,string;65009,test3,string

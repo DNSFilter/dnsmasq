@@ -4417,19 +4417,45 @@ err:
             break;
           }
 
-        daemon->local_opts = malloc(n*sizeof(struct local_opt));
+        daemon->local_opts = malloc((n/2)*sizeof(struct local_opt));
         daemon->local_opts_length = 0;
         n = 0;
         while(arg)
           {
             daemon->local_opts[n] = malloc(sizeof(struct local_opt));
             comma = split_chr(arg, ';');
-            char *value = split(arg);
-            if (!atoi_check16(arg, &daemon->local_opts[n]->code))
+            char *value_format = split(arg);
+            char *code = arg;
+            char *format = split(value_format);
+            char *value = value_format;
+
+            if (!atoi_check16(code, &daemon->local_opts[n]->code))
               {
                 ret_err_free(_("invalid local OPT code value"), &daemon->local_opts[n]);
               }
-            daemon->local_opts[n]->data = opt_string_alloc(value);
+
+            if (strcmp(format, "hex") == 0)
+              {
+                int len = strlen(value);
+                if (len % 2 != 0)
+                {
+                    ret_err_free(_("invalid string representation for hexadecimal value, number of characters is odd"), &daemon->local_opts[n]);
+                }
+
+                char *hex = malloc(sizeof(char)*((len/2) + 1));
+                int parsed = parse_hex(value, hex, len/2, NULL, NULL);
+                if (parsed != len/2)
+                {
+                    ret_err_free(_("invalid hexadecimal value"), &daemon->local_opts[n]);
+                }
+
+                daemon->local_opts[n]->data = hex;
+              }
+            else
+              {
+                  daemon->local_opts[n]->data = opt_string_alloc(value);
+              }
+
             daemon->local_opts_length++;
             arg = comma;
             n++;
