@@ -1140,6 +1140,9 @@ extern struct daemon {
   /* Custom eDNS0 OPTs */
   struct local_opt **local_opts;
   int local_opts_length;
+
+  /* Requester IPv4 custom eDNS0 OPT */
+  int local_opt_ipv4;
 } *daemon;
 
 /* cache.c */
