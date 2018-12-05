@@ -682,3 +682,7 @@
 # opt-code,value,format
 # Valid formats: string, hex
 #custom-opts=65007,d0ded65e1cd99642892d5685d6486490,hex;65008,test2,string;65009,test3,string
+
+# Custom OPT eDNS0 field to add requester IPv4 address on every request
+# IP address will be sent as a four byte array
+#custom-opt-local-ipv4=65002

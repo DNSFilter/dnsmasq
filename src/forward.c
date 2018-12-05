@@ -369,6 +369,12 @@ static int forward_query(int udpfd, union mysockaddr *udpaddr,
 	  header->id = htons(forward->new_id);
 
       plen = add_custom_opts_config(header, plen, ((unsigned char *)header) + EDNS_PKTSZ);
+      if (daemon->local_opt_ipv4)
+        {
+            unsigned char ipv4addr[4] = {0, 0, 0, 0};
+            memcpy(ipv4addr, &forward->source.in.sin_addr, 4);
+            plen = add_pseudoheader(header, plen, ((unsigned char *)header) + EDNS_PKTSZ, PACKETSZ, daemon->local_opt_ipv4, ipv4addr, 4, 0, 1);
+        }
 	  
 	  /* In strict_order mode, always try servers in the order 
 	     specified in resolv.conf, if a domain is given 

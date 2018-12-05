@@ -167,6 +167,7 @@ struct myoption {
 #define LOPT_NAME_MATCH    355
 #define LOPT_CAA           356
 #define LOPT_CUSTOM_OPTS   357
+#define LOPT_CUSTOM_OPT_LOCAL_IPV4  358
 
 #ifdef HAVE_GETOPT_LONG
 static const struct option opts[] =  
@@ -339,6 +340,7 @@ static const struct myoption opts[] =
     { "dumpfile", 1, 0, LOPT_DUMPFILE },
     { "dumpmask", 1, 0, LOPT_DUMPMASK },
     { "custom-opts", 2, 0, LOPT_CUSTOM_OPTS },
+    { "custom-opt-local-ipv4", 2, 0, LOPT_CUSTOM_OPT_LOCAL_IPV4 },
     { NULL, 0, 0, 0 }
   };
 
@@ -518,6 +520,7 @@ static struct {
   { LOPT_DUMPFILE, ARG_ONE, "<path>", gettext_noop("Path to debug packet dump file"), NULL },
   { LOPT_DUMPMASK, ARG_ONE, "<hex>", gettext_noop("Mask which packets to dump"), NULL },
   { LOPT_CUSTOM_OPTS, ARG_ONE, "<hex>", gettext_noop("Custom OPT eDNS0 fields to be send on every request"), NULL },
+  { LOPT_CUSTOM_OPT_LOCAL_IPV4, ARG_ONE, "<hex>", gettext_noop("Adds requester IPv4 address as a custom OPT eDNS0 field on every request"), NULL },
   { 0, 0, NULL, NULL, NULL }
 };
 
@@ -4461,6 +4464,18 @@ err:
             n++;
           }
 
+        break;
+      }
+
+    case LOPT_CUSTOM_OPT_LOCAL_IPV4: /* -- Requester IPv4 address as custom eDNS0 OPT */
+      {
+        int code = 0;
+        if (!atoi_check16(arg, &code))
+        {
+          ret_err(_("invalid local OPT code value for requester IPv4 address"));
+        }
+
+        daemon->local_opt_ipv4 = code;
         break;
       }
 
