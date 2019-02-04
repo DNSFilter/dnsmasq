@@ -4430,12 +4430,11 @@ err:
             ret_err(_("Bad custom-opts"));
           }
 
-        daemon->local_opts = opt_malloc((n/2)*sizeof(struct local_opt*));
+        daemon->local_opts = opt_malloc((n/2)*sizeof(struct local_opt));
         daemon->local_opts_length = 0;
         n = 0;
         while(arg)
           {
-            daemon->local_opts[n] = opt_malloc(sizeof(struct local_opt));
             daemon->local_opts_length++;
 
             comma = split_chr(arg, ';');
@@ -4444,7 +4443,7 @@ err:
             char *format = split(value_format);
             char *value = value_format;
 
-            if (!atoi_check16(code, &daemon->local_opts[n]->code) || daemon->local_opts[n]->code <= 0)
+            if (!atoi_check16(code, &daemon->local_opts[n].code) || daemon->local_opts[n].code <= 0)
               {
                 ret_err_free(_("invalid OPT code"), daemon->local_opts);
               }
@@ -4474,11 +4473,11 @@ err:
                     ret_err_free(_("invalid hexadecimal value"), daemon->local_opts);
                 }
 
-                daemon->local_opts[n]->data = hex;
+                daemon->local_opts[n].data = hex;
               }
             else
               {
-                  daemon->local_opts[n]->data = opt_string_alloc(value);
+                  daemon->local_opts[n].data = opt_string_alloc(value);
               }
 
             arg = comma;

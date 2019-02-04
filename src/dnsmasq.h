@@ -1138,7 +1138,7 @@ extern struct daemon {
 #endif
 
   /* Custom eDNS0 OPTs */
-  struct local_opt **local_opts;
+  struct local_opt *local_opts;
   int local_opts_length;
 
   /* Requester IPv4 custom eDNS0 OPT */
