@@ -4406,12 +4406,17 @@ err:
       {
         int n = 0;
         int c = 0;
+        int s = 0;
         while (arg[c] != '\0')
           {
             if (arg[c] == ',')
               {
                 n++;
               }
+            if (arg[c] == ';')
+            {
+              s++;
+            }
             c++;
           }
 
@@ -4420,21 +4425,37 @@ err:
             break;
           }
 
-        daemon->local_opts = malloc((n/2)*sizeof(struct local_opt));
+        if (n % 2 != 0 || (n/2) != (s+1))
+          {
+            ret_err(_("Bad custom-opts"));
+          }
+
+        daemon->local_opts = opt_malloc((n/2)*sizeof(struct local_opt));
         daemon->local_opts_length = 0;
         n = 0;
         while(arg)
           {
-            daemon->local_opts[n] = malloc(sizeof(struct local_opt));
+            daemon->local_opts_length++;
+
             comma = split_chr(arg, ';');
             char *value_format = split(arg);
             char *code = arg;
             char *format = split(value_format);
             char *value = value_format;
 
-            if (!atoi_check16(code, &daemon->local_opts[n]->code))
+            if (!atoi_check16(code, &daemon->local_opts[n].code) || daemon->local_opts[n].code <= 0)
               {
-                ret_err_free(_("invalid local OPT code value"), &daemon->local_opts[n]);
+                ret_err_free(_("invalid OPT code"), daemon->local_opts);
+              }
+
+            if (strcmp(format, "hex") != 0 && strcmp(format, "string"))
+              {
+                ret_err_free(_("invalid format for OPT code, it must be hex or string"), daemon->local_opts);
+              }
+
+            if (strlen(value) == 0)
+              {
+                ret_err_free(_("empty value for OPT code"), daemon->local_opts);
               }
 
             if (strcmp(format, "hex") == 0)
@@ -4442,24 +4463,23 @@ err:
                 int len = strlen(value);
                 if (len % 2 != 0)
                 {
-                    ret_err_free(_("invalid string representation for hexadecimal value, number of characters is odd"), &daemon->local_opts[n]);
+                    ret_err_free(_("invalid string representation for hexadecimal value, number of characters is odd"), daemon->local_opts);
                 }
 
-                char *hex = malloc(sizeof(char)*((len/2) + 1));
+                char *hex = opt_malloc(sizeof(char)*((len/2) + 1));
                 int parsed = parse_hex(value, hex, len/2, NULL, NULL);
                 if (parsed != len/2)
                 {
-                    ret_err_free(_("invalid hexadecimal value"), &daemon->local_opts[n]);
+                    ret_err_free(_("invalid hexadecimal value"), daemon->local_opts);
                 }
 
-                daemon->local_opts[n]->data = hex;
+                daemon->local_opts[n].data = hex;
               }
             else
               {
-                  daemon->local_opts[n]->data = opt_string_alloc(value);
+                  daemon->local_opts[n].data = opt_string_alloc(value);
               }
 
-            daemon->local_opts_length++;
             arg = comma;
             n++;
           }
@@ -4470,7 +4490,7 @@ err:
     case LOPT_CUSTOM_OPT_LOCAL_IPV4: /* -- Requester IPv4 address as custom eDNS0 OPT */
       {
         int code = 0;
-        if (!atoi_check16(arg, &code))
+        if (!atoi_check16(arg, &code) || code <= 0)
         {
           ret_err(_("invalid local OPT code value for requester IPv4 address"));
         }
